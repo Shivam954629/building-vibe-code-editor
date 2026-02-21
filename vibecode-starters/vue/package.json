@@ -1,5 +1,5 @@
 {
-  "name": "react-ts-template",
+  "name": "vue-ts-template",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -7,13 +7,10 @@
     "start": "vite --host --port 3000"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "vue": "^3.4.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@vitejs/plugin-react": "^4.2.0",
+    "@vitejs/plugin-vue": "^5.0.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0"
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { WebContainer } from "@webcontainer/api";
 import { TemplateFolder } from "@/modules/playground/lib/path-to-json";
 
@@ -15,6 +15,10 @@ interface UseWebContaierReturn {
   destory: () => void;
 }
 
+// Global instance - sirf ek baar boot hoga
+let globalInstance: WebContainer | null = null;
+let globalIsBooting = false;
+
 export const useWebContainer = ({
   templateData,
 }: UseWebContainerProps): UseWebContaierReturn => {
@@ -27,20 +31,43 @@ export const useWebContainer = ({
     let mounted = true;
 
     async function initializeWebContainer() {
+      if (globalInstance) {
+        setInstance(globalInstance);
+        setIsLoading(false);
+        return;
+      }
+
+      if (globalIsBooting) {
+        const interval = setInterval(() => {
+          if (globalInstance) {
+            clearInterval(interval);
+            if (mounted) {
+              setInstance(globalInstance);
+              setIsLoading(false);
+            }
+          }
+        }, 100);
+        return;
+      }
+
       try {
+        globalIsBooting = true;
         const webcontainerInstance = await WebContainer.boot();
 
         if (!mounted) return;
 
+        globalInstance = webcontainerInstance;
+        globalIsBooting = false;
         setInstance(webcontainerInstance);
         setIsLoading(false);
       } catch (error) {
+        globalIsBooting = false;
         console.error("Failed to initialize WebContainer:", error);
         if (mounted) {
           setError(
             error instanceof Error
               ? error.message
-              : "Failed to initialize WebContainer"
+              : "Failed to initialize WebContainer",
           );
           setIsLoading(false);
         }
@@ -51,9 +78,7 @@ export const useWebContainer = ({
 
     return () => {
       mounted = false;
-      if (instance) {
-        instance.teardown();
-      }
+      // Global instance teardown mat karo - reuse hoga
     };
   }, []);
 
@@ -68,7 +93,7 @@ export const useWebContainer = ({
         const folderPath = pathParts.slice(0, -1).join("/");
 
         if (folderPath) {
-          await instance.fs.mkdir(folderPath, { recursive: true }); // Create folder structure recursively
+          await instance.fs.mkdir(folderPath, { recursive: true });
         }
 
         await instance.fs.writeFile(path, content);
@@ -79,16 +104,17 @@ export const useWebContainer = ({
         throw new Error(`Failed to write file at ${path}: ${errorMessage}`);
       }
     },
-    [instance]
+    [instance],
   );
 
-  const destory = useCallback(()=>{
-    if(instance){
-        instance.teardown()
-        setInstance(null);
-        setServerUrl(null)
+  const destory = useCallback(() => {
+    if (instance) {
+      instance.teardown();
+      globalInstance = null;
+      setInstance(null);
+      setServerUrl(null);
     }
-  },[instance])
+  }, [instance]);
 
-  return {serverUrl , isLoading , error , instance , writeFileSync , destory}
+  return { serverUrl, isLoading, error, instance, writeFileSync, destory };
 };

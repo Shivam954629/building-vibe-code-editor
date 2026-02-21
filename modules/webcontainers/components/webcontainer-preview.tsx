@@ -16,7 +16,8 @@ interface WebContainerPreviewProps {
   error: string | null;
   instance: WebContainer | null;
   writeFileSync: (path: string, content: string) => Promise<void>;
-  forceResetup?: boolean; // Optional prop to force re-setup
+  forceResetup?: boolean;
+  onRegisterRefresh?: (fn: () => void) => void;
 }
 const WebContainerPreview = ({
   templateData,
@@ -26,6 +27,7 @@ const WebContainerPreview = ({
   serverUrl,
   writeFileSync,
   forceResetup = false,
+  onRegisterRefresh,
 }: WebContainerPreviewProps) => {
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [loadingState, setLoadingState] = useState({
@@ -40,8 +42,26 @@ const WebContainerPreview = ({
   const [setupError, setSetupError] = useState<string | null>(null);
   const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [isSetupInProgress, setIsSetupInProgress] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const terminalRef = useRef<any>(null);
+
+  // Register the refresh function with parent
+  // Register the refresh function with parent
+  useEffect(() => {
+    if (onRegisterRefresh) {
+      onRegisterRefresh(() => {
+        if (iframeRef.current && previewUrl) {
+          iframeRef.current.src = "";
+          setTimeout(() => {
+            if (iframeRef.current) {
+              iframeRef.current.src = previewUrl;
+            }
+          }, 100);
+        }
+      });
+    }
+  }, [onRegisterRefresh, previewUrl]);
 
   // Reset setup state when forceResetup changes
   useEffect(() => {
@@ -71,21 +91,20 @@ const WebContainerPreview = ({
         try {
           const packageJsonExists = await instance.fs.readFile(
             "package.json",
-            "utf8"
+            "utf8",
           );
 
           if (packageJsonExists) {
-            // Files are already mounted, just reconnect to existing server
             if (terminalRef.current?.writeToTerminal) {
               terminalRef.current.writeToTerminal(
-                "🔄 Reconnecting to existing WebContainer session...\r\n"
+                "🔄 Reconnecting to existing WebContainer session...\r\n",
               );
             }
 
             instance.on("server-ready", (port: number, url: string) => {
               if (terminalRef.current?.writeToTerminal) {
                 terminalRef.current.writeToTerminal(
-                  `🌐 Reconnected to server at ${url}\r\n`
+                  `🌐 Reconnected to server at ${url}\r\n`,
                 );
               }
 
@@ -106,10 +125,9 @@ const WebContainerPreview = ({
         // Step-1 transform data
         setLoadingState((prev) => ({ ...prev, transforming: true }));
         setCurrentStep(1);
-        // Write to terminal
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(
-            "🔄 Transforming template data...\r\n"
+            "🔄 Transforming template data...\r\n",
           );
         }
 
@@ -122,18 +140,16 @@ const WebContainerPreview = ({
         }));
         setCurrentStep(2);
 
-        //  Step-2 Mount Files
-
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(
-            "📁 Mounting files to WebContainer...\r\n"
+            "📁 Mounting files to WebContainer...\r\n",
           );
         }
         await instance.mount(files);
 
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(
-            "✅ Files mounted successfully\r\n"
+            "✅ Files mounted successfully\r\n",
           );
         }
         setLoadingState((prev) => ({
@@ -143,11 +159,9 @@ const WebContainerPreview = ({
         }));
         setCurrentStep(3);
 
-        // Step-3 Install dependencies
-
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(
-            "📦 Installing dependencies...\r\n"
+            "📦 Installing dependencies...\r\n",
           );
         }
 
@@ -160,20 +174,20 @@ const WebContainerPreview = ({
                 terminalRef.current.writeToTerminal(data);
               }
             },
-          })
+          }),
         );
 
         const installExitCode = await installProcess.exit;
 
         if (installExitCode !== 0) {
           throw new Error(
-            `Failed to install dependencies. Exit code: ${installExitCode}`
+            `Failed to install dependencies. Exit code: ${installExitCode}`,
           );
         }
 
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(
-            "✅ Dependencies installed successfully\r\n"
+            "✅ Dependencies installed successfully\r\n",
           );
         }
 
@@ -184,11 +198,9 @@ const WebContainerPreview = ({
         }));
         setCurrentStep(4);
 
-        // STEP-4 Start The Server
-
         if (terminalRef.current?.writeToTerminal) {
           terminalRef.current.writeToTerminal(
-            "🚀 Starting development server...\r\n"
+            "🚀 Starting development server...\r\n",
           );
         }
 
@@ -197,7 +209,7 @@ const WebContainerPreview = ({
         instance.on("server-ready", (port: number, url: string) => {
           if (terminalRef.current?.writeToTerminal) {
             terminalRef.current.writeToTerminal(
-              `🌐 Server ready at ${url}\r\n`
+              `🌐 Server ready at ${url}\r\n`,
             );
           }
           setPreviewUrl(url);
@@ -210,7 +222,6 @@ const WebContainerPreview = ({
           setIsSetupInProgress(false);
         });
 
-        // Handle start process output - stream to terminal
         startProcess.output.pipeTo(
           new WritableStream({
             write(data) {
@@ -218,7 +229,7 @@ const WebContainerPreview = ({
                 terminalRef.current.writeToTerminal(data);
               }
             },
-          })
+          }),
         );
       } catch (err) {
         console.error("Error setting up container:", err);
@@ -292,8 +303,8 @@ const WebContainerPreview = ({
           isComplete
             ? "text-green-600"
             : isActive
-            ? "text-blue-600"
-            : "text-gray-500"
+              ? "text-blue-600"
+              : "text-gray-500"
         }`}
       >
         {label}
@@ -331,7 +342,6 @@ const WebContainerPreview = ({
             </div>
           </div>
 
-          {/* Terminal */}
           <div className="flex-1 p-4">
             <TerminalComponent
               ref={terminalRef}
@@ -345,6 +355,7 @@ const WebContainerPreview = ({
         <div className="h-full flex flex-col">
           <div className="flex-1">
             <iframe
+              ref={iframeRef}
               src={previewUrl}
               className="w-full h-full border-none"
               title="WebContainer Preview"
@@ -363,6 +374,6 @@ const WebContainerPreview = ({
       )}
     </div>
   );
-};
+};;
 
 export default WebContainerPreview;

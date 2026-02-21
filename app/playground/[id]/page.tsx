@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import LoadingStep from "@/modules/playground/components/loader";
-import {PlaygroundEditor} from "@/modules/playground/components/playground-editor";
+import { PlaygroundEditor } from "@/modules/playground/components/playground-editor";
 import { TemplateFileTree } from "@/modules/playground/components/playground-explorer";
 import ToggleAI from "@/modules/playground/components/toggle-ai";
 import { useAISuggestions } from "@/modules/playground/hooks/useAISuggestion";
@@ -57,11 +57,12 @@ import { toast } from "sonner";
 const MainPlaygroundPage = () => {
   const { id } = useParams<{ id: string }>();
   const [isPreviewVisible, setIsPreviewVisible] = useState(true);
+  const refreshPreviewRef = useRef<(() => void) | null>(null);
 
   const { playgroundData, templateData, isLoading, error, saveTemplateData } =
     usePlayground(id);
 
-    const aiSuggestions = useAISuggestions();
+  const aiSuggestions = useAISuggestions();
 
   const {
     setTemplateData,
@@ -80,7 +81,7 @@ const MainPlaygroundPage = () => {
     handleDeleteFolder,
     handleRenameFile,
     handleRenameFolder,
-    updateFileContent
+    updateFileContent,
   } = useFileExplorer();
 
   const {
@@ -104,7 +105,6 @@ const MainPlaygroundPage = () => {
     }
   }, [templateData, setTemplateData, openFiles.length]);
 
-  // Create wrapper functions that pass saveTemplateData
   const wrappedHandleAddFile = useCallback(
     (newFile: TemplateFile, parentPath: string) => {
       return handleAddFile(
@@ -112,31 +112,31 @@ const MainPlaygroundPage = () => {
         parentPath,
         writeFileSync!,
         instance,
-        saveTemplateData
+        saveTemplateData,
       );
     },
-    [handleAddFile, writeFileSync, instance, saveTemplateData]
+    [handleAddFile, writeFileSync, instance, saveTemplateData],
   );
 
   const wrappedHandleAddFolder = useCallback(
     (newFolder: TemplateFolder, parentPath: string) => {
       return handleAddFolder(newFolder, parentPath, instance, saveTemplateData);
     },
-    [handleAddFolder, instance, saveTemplateData]
+    [handleAddFolder, instance, saveTemplateData],
   );
 
   const wrappedHandleDeleteFile = useCallback(
     (file: TemplateFile, parentPath: string) => {
       return handleDeleteFile(file, parentPath, saveTemplateData);
     },
-    [handleDeleteFile, saveTemplateData]
+    [handleDeleteFile, saveTemplateData],
   );
 
   const wrappedHandleDeleteFolder = useCallback(
     (folder: TemplateFolder, parentPath: string) => {
       return handleDeleteFolder(folder, parentPath, saveTemplateData);
     },
-    [handleDeleteFolder, saveTemplateData]
+    [handleDeleteFolder, saveTemplateData],
   );
 
   const wrappedHandleRenameFile = useCallback(
@@ -144,17 +144,17 @@ const MainPlaygroundPage = () => {
       file: TemplateFile,
       newFilename: string,
       newExtension: string,
-      parentPath: string
+      parentPath: string,
     ) => {
       return handleRenameFile(
         file,
         newFilename,
         newExtension,
         parentPath,
-        saveTemplateData
+        saveTemplateData,
       );
     },
-    [handleRenameFile, saveTemplateData]
+    [handleRenameFile, saveTemplateData],
   );
 
   const wrappedHandleRenameFolder = useCallback(
@@ -163,10 +163,10 @@ const MainPlaygroundPage = () => {
         folder,
         newFolderName,
         parentPath,
-        saveTemplateData
+        saveTemplateData,
       );
     },
-    [handleRenameFolder, saveTemplateData]
+    [handleRenameFolder, saveTemplateData],
   );
 
   const activeFile = openFiles.find((file) => file.id === activeFileId);
@@ -186,24 +186,24 @@ const MainPlaygroundPage = () => {
       if (!fileToSave) return;
 
       const latestTemplateData = useFileExplorer.getState().templateData;
-      if (!latestTemplateData) return
+      if (!latestTemplateData) return;
 
       try {
-            const filePath = findFilePath(fileToSave, latestTemplateData);
+        const filePath = findFilePath(fileToSave, latestTemplateData);
         if (!filePath) {
           toast.error(
-            `Could not find path for file: ${fileToSave.filename}.${fileToSave.fileExtension}`
+            `Could not find path for file: ${fileToSave.filename}.${fileToSave.fileExtension}`,
           );
           return;
         }
 
-   const updatedTemplateData = JSON.parse(
-          JSON.stringify(latestTemplateData)
+        const updatedTemplateData = JSON.parse(
+          JSON.stringify(latestTemplateData),
         );
 
         // @ts-ignore
-          const updateFileContent = (items: any[]) =>
-            // @ts-ignore
+        const updateFileContent = (items: any[]) =>
+          // @ts-ignore
           items.map((item) => {
             if ("folderName" in item) {
               return { ...item, items: updateFileContent(item.items) };
@@ -216,10 +216,10 @@ const MainPlaygroundPage = () => {
             return item;
           });
         updatedTemplateData.items = updateFileContent(
-          updatedTemplateData.items
+          updatedTemplateData.items,
         );
 
-          // Sync with WebContainer
+        // Sync with WebContainer
         if (writeFileSync) {
           await writeFileSync(filePath, fileToSave.content);
           lastSyncedContent.current.set(fileToSave.id, fileToSave.content);
@@ -228,9 +228,9 @@ const MainPlaygroundPage = () => {
           }
         }
 
-           const newTemplateData = await saveTemplateData(updatedTemplateData);
+        const newTemplateData = await saveTemplateData(updatedTemplateData);
         setTemplateData(newTemplateData || updatedTemplateData);
-// Update open files
+
         const updatedOpenFiles = openFiles.map((f) =>
           f.id === targetFileId
             ? {
@@ -239,17 +239,23 @@ const MainPlaygroundPage = () => {
                 originalContent: fileToSave.content,
                 hasUnsavedChanges: false,
               }
-            : f
+            : f,
         );
         setOpenFiles(updatedOpenFiles);
 
-    toast.success(
-          `Saved ${fileToSave.filename}.${fileToSave.fileExtension}`
+        // Sirf iframe reload karo, poora component nahi
+        // Sirf iframe reload karo, poora component nahi
+        console.log("refresh ref:", refreshPreviewRef.current);
+        if (refreshPreviewRef.current) {
+          refreshPreviewRef.current();
+        }
+        toast.success(
+          `Saved ${fileToSave.filename}.${fileToSave.fileExtension}`,
         );
       } catch (error) {
-         console.error("Error saving file:", error);
+        console.error("Error saving file:", error);
         toast.error(
-          `Failed to save ${fileToSave.filename}.${fileToSave.fileExtension}`
+          `Failed to save ${fileToSave.filename}.${fileToSave.fileExtension}`,
         );
         throw error;
       }
@@ -262,10 +268,10 @@ const MainPlaygroundPage = () => {
       saveTemplateData,
       setTemplateData,
       setOpenFiles,
-    ]
+    ],
   );
 
-    const handleSaveAll = async () => {
+  const handleSaveAll = async () => {
     const unsavedFiles = openFiles.filter((f) => f.hasUnsavedChanges);
 
     if (unsavedFiles.length === 0) {
@@ -281,17 +287,16 @@ const MainPlaygroundPage = () => {
     }
   };
 
-
-  useEffect(()=>{
-    const handleKeyDown = (e:KeyboardEvent)=>{
-      if(e.ctrlKey && e.key === "s"){
-        e.preventDefault()
-        handleSave()
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "s") {
+        e.preventDefault();
+        handleSave();
       }
-    }
-     window.addEventListener("keydown", handleKeyDown);
-     return () => window.removeEventListener("keydown", handleKeyDown);
-  },[handleSave]);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSave]);
 
   if (error) {
     return (
@@ -308,7 +313,6 @@ const MainPlaygroundPage = () => {
     );
   }
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
@@ -334,7 +338,6 @@ const MainPlaygroundPage = () => {
     );
   }
 
-  // No template data
   if (!templateData) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] p-4">
@@ -366,8 +369,15 @@ const MainPlaygroundPage = () => {
         />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+           
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
+            <a
+              href="/dashboard"
+              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mr-2"
+            >
+              ← Dashboard
+            </a>
 
             <div className="flex flex-1 items-center gap-2">
               <div className="flex flex-col flex-1">
@@ -527,6 +537,9 @@ const MainPlaygroundPage = () => {
                             error={containerError}
                             serverUrl={serverUrl!}
                             forceResetup={false}
+                            onRegisterRefresh={(fn) => {
+                              refreshPreviewRef.current = fn;
+                            }}
                           />
                         </ResizablePanel>
                       </>
