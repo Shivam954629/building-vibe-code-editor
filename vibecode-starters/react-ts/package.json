@@ -1,0 +1,9 @@
+{
+  "name": "react-ts-template",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "start": "echo Dev server started"
+  },
+  "dependencies": {}
+}
