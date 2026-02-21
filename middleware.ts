@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-
 import {
   DEFAULT_LOGIN_REDIRECT,
   apiAuthPrefix,
@@ -16,11 +15,16 @@ export default auth((req) => {
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
 
-  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
+  // ✅ Allow these API routes without login
+  const isPublicApiRoute =
+    nextUrl.pathname.startsWith("/api/code-completion") ||
+    nextUrl.pathname.startsWith("/api/chat");
 
+  const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  if (isApiAuthRoute) {
+  // Allow next-auth api routes + our public APIs
+  if (isApiAuthRoute || isPublicApiRoute) {
     return null;
   }
 
@@ -39,6 +43,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  // copied from clerk
   matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
 };

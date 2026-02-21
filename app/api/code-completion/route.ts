@@ -109,67 +109,70 @@ function analyzeCodeContext(
 }
 
 function buildPrompt(context: CodeContext, suggestionType: string): string {
-  return `You are an expert code completion assistant. Generate a ${suggestionType} suggestion.
+  return `
+You are a strict code completion engine.
+
+Return ONLY the raw code that should be inserted at the cursor.
+DO NOT explain.
+DO NOT add markdown.
+DO NOT use backticks.
+DO NOT describe anything.
+ONLY output pure code.
 
 Language: ${context.language}
 Framework: ${context.framework}
 
-Context:
+Code Context:
 ${context.beforeContext}
 ${context.currentLine.substring(
   0,
   context.cursorPosition.column
-)}|CURSOR|${context.currentLine.substring(context.cursorPosition.column)}
+)}${context.currentLine.substring(context.cursorPosition.column)}
 ${context.afterContext}
 
-Analysis:
-- In Function: ${context.isInFunction}
-- In Class: ${context.isInClass}
-- After Comment: ${context.isAfterComment}
-- Incomplete Patterns: ${context.incompletePatterns.join(", ") || "None"}
+The cursor is exactly where the code must be completed.
 
-Instructions:
-1. Provide only the code that should be inserted at the cursor
-2. Maintain proper indentation and style
-3. Follow ${context.language} best practices
-4. Make the suggestion contextually appropriate
-
-Generate suggestion:`;
+Output:
+`;
 }
+
+const OLLAMA_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
 
 async function generateSuggestion(prompt: string): Promise<string> {
   try {
-    const response = await fetch("http://localhost:11434/api/generate", {
+    const response = await fetch(`${OLLAMA_URL}/api/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "codellama:latest",
+        model: process.env.OLLAMA_MODEL || "deepseek-coder",
         prompt,
         stream: false,
-        option: {
-          temperature: 0.7,
-          max_tokens: 300,
+        options: {
+          temperature: 0.2,
+          num_predict: 300,
         },
       }),
     });
 
-       if (!response.ok) {
-      throw new Error(`AI service error: ${response.statusText}`)
+    if (!response.ok) {
+      throw new Error(`AI service error: ${response.statusText}`);
     }
 
-      const data = await response.json()
-    let suggestion = data.response
+   const data = await response.json();
+   let suggestion = data.response || "// No suggestion generated";
 
-     // Clean up the suggestion
-    if (suggestion.includes("```")) {
-      const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/)
-      suggestion = codeMatch ? codeMatch[1].trim() : suggestion
-    }
+   if (suggestion.includes("```")) {
+     const codeMatch = suggestion.match(/```[\w]*\n?([\s\S]*?)```/);
+     suggestion = codeMatch ? codeMatch[1].trim() : suggestion;
+   }
 
-    return suggestion
+   // ✅ Remove unwanted leading "return"
+   suggestion = suggestion.replace(/^return\s+/, "");
+
+   return suggestion.trim();
   } catch (error) {
-      console.error("AI generation error:", error)
-    return "// AI suggestion unavailable"
+    console.error("AI generation error:", error);
+    return "// AI suggestion unavailable";
   }
 }
 
