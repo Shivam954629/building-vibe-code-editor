@@ -47,7 +47,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import "katex/dist/katex.min.css";
 import Image from "next/image";
-import Stream from "stream";
 
 interface ChatMessage {
     role: "user" | "assistant";
@@ -123,7 +122,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     const [filterType, setFilterType] = useState<string>("all");
     const [autoSave, setAutoSave] = useState(true);
     const [streamResponse, setStreamResponse] = useState(true);
-    const [model, setModel] = useState<string>("deepseek-coder:latest");
+    const [model, setModel] = useState<string>("llama-3.3-70b-versatile");
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -154,93 +153,130 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
     };
 
    const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+     e.preventDefault();
+     if (!input.trim() || isLoading) return;
 
-    const messageType =
-      chatMode === "chat"
-        ? "chat"
-        : chatMode === "review"
-        ? "code_review"
-        : chatMode === "fix"
-        ? "error_fix"
-        : "optimization";
+     const messageType =
+       chatMode === "chat"
+         ? "chat"
+         : chatMode === "review"
+           ? "code_review"
+           : chatMode === "fix"
+             ? "error_fix"
+             : "optimization";
 
-    const newMessage: ChatMessage = {
-      role: "user",
-      content: input.trim(),
-      timestamp: new Date(),
-      id: Date.now().toString(),
-      type: messageType,
-    };
+     const newMessage: ChatMessage = {
+       role: "user",
+       content: input.trim(),
+       timestamp: new Date(),
+       id: Date.now().toString(),
+       type: messageType,
+     };
 
-    setMessages((prev) => [...prev, newMessage]);
-    setInput("");
-    setIsLoading(true);
+     setMessages((prev) => [...prev, newMessage]);
+     setInput("");
+     setIsLoading(true);
 
-    try {
-      const contextualMessage = getChatModePrompt(chatMode, input.trim());
+     try {
+       const contextualMessage = getChatModePrompt(chatMode, input.trim());
 
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: contextualMessage,
-          history: messages.slice(-10).map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-          stream: streamResponse,
-          mode: chatMode,
-          model,
-        }),
-      });
+       const response = await fetch("/api/chat", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           message: contextualMessage,
+           history: messages.slice(-10).map((msg) => ({
+             role: msg.role,
+             content: msg.content,
+           })),
+           stream: streamResponse,
+           mode: chatMode,
+           model,
+         }),
+       });
 
-      if (response.ok) {
-        const data = await response.json();
+       if (!response.ok) throw new Error("API error");
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: data.response,
-            timestamp: new Date(),
-            id: Date.now().toString(),
-            type: messageType,
-            tokens: data.tokens,
-            model: data.model || "AI Assistant",
-          },
-        ]);
-      } else {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content:
-              "Sorry, I encountered an error while processing your request. Please try again.",
-            timestamp: new Date(),
-            id: Date.now().toString(),
-          },
-        ]);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "I'm having trouble connecting right now. Please check your internet connection and try again.",
-          timestamp: new Date(),
-          id: Date.now().toString(),
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+       if (streamResponse && response.body) {
+         // Streaming response handle karo
+         const reader = response.body.getReader();
+         const decoder = new TextDecoder();
+         let assistantContent = "";
+         const assistantId = Date.now().toString();
+
+         // Pehle empty message add karo
+         setMessages((prev) => [
+           ...prev,
+           {
+             role: "assistant",
+             content: "",
+             timestamp: new Date(),
+             id: assistantId,
+             type: messageType,
+             model: "llama-3.3-70b-versatile",
+           },
+         ]);
+
+         while (true) {
+           const { done, value } = await reader.read();
+           if (done) break;
+
+           const chunk = decoder.decode(value);
+           const lines = chunk.split("\n");
+
+           for (const line of lines) {
+             const trimmed = line.trim();
+             if (!trimmed || trimmed === "data: [DONE]") continue;
+             if (trimmed.startsWith("data: ")) {
+               try {
+                 const json = JSON.parse(trimmed.slice(6));
+                 const text = json.text || "";
+                 if (text) {
+                   assistantContent += text;
+                   setMessages((prev) =>
+                     prev.map((msg) =>
+                       msg.id === assistantId
+                         ? { ...msg, content: assistantContent }
+                         : msg,
+                     ),
+                   );
+                 }
+               } catch {}
+             }
+           }
+         }
+       } else {
+         // Non-streaming response handle karo
+         const data = await response.json();
+         setMessages((prev) => [
+           ...prev,
+           {
+             role: "assistant",
+             content: data.response,
+             timestamp: new Date(),
+             id: Date.now().toString(),
+             type: messageType,
+             tokens: data.tokens,
+             model: data.model || "llama-3.3-70b-versatile",
+           },
+         ]);
+       }
+     } catch (error) {
+       console.error("Error sending message:", error);
+       setMessages((prev) => [
+         ...prev,
+         {
+           role: "assistant",
+           content:
+             "I'm having trouble connecting right now. Please check your internet connection and try again.",
+           timestamp: new Date(),
+           id: Date.now().toString(),
+         },
+       ]);
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
     const exportChat = () => {
          const chatData = {
@@ -398,17 +434,16 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                     <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-400">
                       <span className="text-zinc-500">Model:</span>
                       <select
+                        aria-label="AI Model Selection"
                         value={model}
                         onChange={(e) => setModel(e.target.value)}
                         className="bg-zinc-900/60 border border-zinc-800 rounded px-2 py-1 text-zinc-200 focus:outline-none"
                       >
-                        <option value="deepseek-coder:latest">
-                          deepseek-coder
+                        <option value="llama-3.3-70b-versatile">
+                          Llama 3.3 70B (Smart)
                         </option>
-                        <option value="codellama">codellama</option>
-                        <option value="llama2">llama2</option>
-                        <option value="deepseek-coder:1.3b">
-                          deepseek-coder (fast)
+                        <option value="llama-3.1-8b-instant">
+                          Llama 3.1 8B (Fast)
                         </option>
                       </select>
                     </div>
@@ -532,8 +567,15 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                             remarkPlugins={[remarkGfm, remarkMath]}
                             rehypePlugins={[rehypeKatex]}
                             components={{
-                              code: ({ children, className, inline }) => {
-                                if (inline) {
+                              code: ({
+                                children,
+                                className,
+                              }: {
+                                children: React.ReactNode;
+                                className?: string;
+                              }) => {
+                                const isInline = !className;
+                                if (isInline) {
                                   return (
                                     <code className="bg-zinc-800 px-1 py-0.5 rounded text-sm">
                                       {children}
@@ -541,13 +583,11 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                                   );
                                 }
                                 return (
-                                  <div className="bg-zinc-800 rounded-lg p-4 my-4">
-                                    <pre className="text-sm text-zinc-100 overflow-x-auto">
-                                      <code className={className}>
-                                        {children}
-                                      </code>
-                                    </pre>
-                                  </div>
+                                  <code
+                                    className={`block bg-zinc-800 rounded-lg p-4 my-4 text-sm text-zinc-100 overflow-x-auto whitespace-pre ${className || ""}`}
+                                  >
+                                    {children}
+                                  </code>
                                 );
                               },
                             }}
