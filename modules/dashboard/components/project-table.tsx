@@ -120,9 +120,7 @@ export default function ProjectTable({
     }
   };
 
-  const handleMarkasFavorite = async (project: Project) => {
-    //    Write your logic here
-  };
+  
 
   const handleDeleteProject = async () => {
     if (!selectedProject || !onDeleteProject) return;
