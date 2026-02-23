@@ -547,7 +547,7 @@ export const PlaygroundEditor = ({
       {currentSuggestionRef.current && !suggestionLoading && (
         <div className="absolute top-2 right-2 z-10 bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-xs text-green-700 dark:text-green-300 flex items-center gap-1">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          Press Tab to accept
+          Click Tab to accept
         </div>
       )}
 
