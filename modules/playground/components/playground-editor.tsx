@@ -433,18 +433,7 @@ export const PlaygroundEditor = ({
         }
       }
 
-      // Trigger new suggestion if appropriate (simplified)
-      if (!currentSuggestionRef.current && !suggestionLoading) {
-        // Clear any existing timeout
-        if (suggestionTimeoutRef.current) {
-          clearTimeout(suggestionTimeoutRef.current)
-        }
-
-        // Trigger suggestion with a delay
-        suggestionTimeoutRef.current = setTimeout(() => {
-          onTriggerSuggestion("completion", editor)
-        }, 300)
-      }
+      
     })
 
     // Listen for content changes to detect manual typing over suggestions
@@ -556,10 +545,17 @@ export const PlaygroundEditor = ({
         value={content}
         onChange={(value) => onContentChange(value || "")}
         onMount={handleEditorDidMount}
-        language={activeFile ? getEditorLanguage(activeFile.fileExtension || "") : "plaintext"}
+        language={
+          activeFile
+            ? getEditorLanguage(activeFile.fileExtension || "")
+            : "plaintext"
+        }
         // @ts-ignore
-        options={defaultEditorOptions}
+        options={{
+          ...defaultEditorOptions,
+          automaticLayout: true,
+        }}
       />
     </div>
-  )
+  );
 }
