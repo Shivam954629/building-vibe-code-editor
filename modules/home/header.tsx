@@ -62,10 +62,10 @@ export function Header() {
                                             Pricing
                                         </Link> */}
                     <Link
-                      href="/dashboard"
+                      href="/docs"
                       className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center gap-2"
                     >
-                      Dashboard
+                      Documentation
                     </Link>
                   </div>
                 </div>
@@ -88,10 +88,10 @@ export function Header() {
                     GitHub
                   </Link>
                   <Link
-                    href="/dashboard"
-                    className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors"
+                    href="/docs"
+                    className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors flex items-center gap-2"
                   >
-                    Dashboard
+                    Documentation
                   </Link>
                   <ThemeToggle />
                   <UserButton />

@@ -1,8 +1,9 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { getAllPlaygroundForUser } from "@/modules/dashboard/actions";
 import { DashboardSidebar } from "@/modules/dashboard/components/dashboard-sidebar";
-import { cookies } from "next/headers";
 
+
+export const dynamic = "force-dynamic";
 export default async function DashboardLayout({
   children,
 }: {
@@ -29,9 +30,7 @@ export default async function DashboardLayout({
     icon:technologyIconMap[item.template] || "Code2"
   }))
 
-  const cookieStore = await cookies();
-  const sidebarState = cookieStore.get("sidebar:state");
-  const isOpen = sidebarState ? sidebarState.value === "true" : true;
+  const isOpen = true;
 
 
   return (

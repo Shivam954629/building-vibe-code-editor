@@ -43,6 +43,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   MoreHorizontal,
   Edit3,
@@ -78,6 +79,7 @@ export default function ProjectTable({
   onDuplicateProject,
 
 }: ProjectTableProps) {
+  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -111,6 +113,8 @@ export default function ProjectTable({
     try {
       await onUpdateProject(selectedProject.id, editData);
       setEditDialogOpen(false);
+      router.refresh();
+     
       toast.success("Project updated successfully");
     } catch (error) {
       toast.error("Failed to update project");
@@ -130,6 +134,7 @@ export default function ProjectTable({
       await onDeleteProject(selectedProject.id);
       setDeleteDialogOpen(false);
       setSelectedProject(null);
+      router.refresh();
       toast.success("Project deleted successfully");
     } catch (error) {
       toast.error("Failed to delete project");
@@ -145,6 +150,7 @@ export default function ProjectTable({
     setIsLoading(true);
     try {
       await onDuplicateProject(project.id);
+      router.refresh();
       toast.success("Project duplicated successfully");
     } catch (error) {
       toast.error("Failed to duplicate project");

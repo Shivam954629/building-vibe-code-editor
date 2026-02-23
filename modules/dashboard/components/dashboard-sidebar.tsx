@@ -1,8 +1,13 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { SpotlightModal } from "./spotlight-modal";
+
+import { createPlayground } from "@/modules/dashboard/actions";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toggleStarMarked } from "@/modules/dashboard/actions";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Code2,
   Compass,
@@ -19,8 +24,7 @@ import {
   Zap,
   Database,
   FlameIcon,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,34 +38,53 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import Image from "next/image"
+  useSidebar,
+} from "@/components/ui/sidebar";
+import Image from "next/image";
 
-// Define the interface for a single playground item, icon is now a string
 interface PlaygroundData {
-  id: string
-  name: string
-  icon: string // Changed to string
-  starred: boolean
+  id: string;
+  name: string;
+  icon: string;
+  starred: boolean;
 }
 
-// Map icon names (strings) to their corresponding LucideIcon components
 const lucideIconMap: Record<string, LucideIcon> = {
-  Zap: Zap,
-  Lightbulb: Lightbulb,
-  Database: Database,
-  Compass: Compass,
-  FlameIcon: FlameIcon,
-  Terminal: Terminal,
-  Code2: Code2, // Include the default icon
-  // Add any other icons you might use dynamically
-}
+  Zap,
+  Lightbulb,
+  Database,
+  Compass,
+  FlameIcon,
+  Terminal,
+  Code2,
+};
 
-export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundData: PlaygroundData[] }) {
-  const pathname = usePathname()
-  const [starredPlaygrounds, setStarredPlaygrounds] = useState(initialPlaygroundData.filter((p) => p.starred))
-  const [recentPlaygrounds, setRecentPlaygrounds] = useState(initialPlaygroundData)
+export function DashboardSidebar({
+  initialPlaygroundData,
+}: {
+  initialPlaygroundData: PlaygroundData[];
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const starredPlaygrounds = initialPlaygroundData.filter((p) => p.starred);
+  const recentPlaygrounds = initialPlaygroundData;
+  const { setOpen } = useSidebar();
   const [showStarModal, setShowStarModal] = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setOpen(true);
+      } else {
+        setOpen(false);
+      }
+    };
+    // Initial check
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [setOpen]);
 
   return (
     <>
@@ -72,6 +95,7 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
           </div>
         </SidebarHeader>
         <SidebarContent>
+          {/* Home & Dashboard */}
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -101,6 +125,7 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
             </SidebarMenu>
           </SidebarGroup>
 
+          {/* Starred */}
           <SidebarGroup>
             <SidebarGroupLabel>
               <Star className="h-4 w-4 mr-2" />
@@ -114,11 +139,10 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
             </SidebarGroupAction>
             <SidebarGroupContent>
               <SidebarMenu>
-                {starredPlaygrounds.length === 0 &&
-                recentPlaygrounds.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-4 w-full">
-                    Create your playground
-                  </div>
+                {starredPlaygrounds.length === 0 ? (
+                  <p className="text-xs text-muted-foreground px-2 py-2">
+                    No starred projects
+                  </p>
                 ) : (
                   starredPlaygrounds.map((playground) => {
                     const IconComponent =
@@ -131,9 +155,7 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
                           tooltip={playground.name}
                         >
                           <Link href={`/playground/${playground.id}`}>
-                            {IconComponent && (
-                              <IconComponent className="h-4 w-4" />
-                            )}
+                            <IconComponent className="h-4 w-4" />
                             <span>{playground.name}</span>
                           </Link>
                         </SidebarMenuButton>
@@ -145,54 +167,61 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
             </SidebarGroupContent>
           </SidebarGroup>
 
+          {/* Recent */}
           <SidebarGroup>
-            <SidebarGroupLabel>
-              <History className="h-4 w-4 mr-2" />
-              Recent
+            <SidebarGroupLabel className="flex justify-between items-center w-full">
+              <div className="flex items-center">
+                <History className="h-4 w-4 mr-2" />
+                Recent
+              </div>
+              <button
+                onClick={() => setShowNewModal(true)}
+                className="hover:text-white text-zinc-400 transition-colors"
+              >
+                <FolderPlus className="h-4 w-4" />
+              </button>
             </SidebarGroupLabel>
-            <SidebarGroupAction title="Create new playground">
-              <FolderPlus className="h-4 w-4" />
-            </SidebarGroupAction>
             <SidebarGroupContent>
               <SidebarMenu>
-                {starredPlaygrounds.length === 0 &&
-                recentPlaygrounds.length === 0
-                  ? null
-                  : recentPlaygrounds.map((playground) => {
-                      const IconComponent =
-                        lucideIconMap[playground.icon] || Code2;
-                      return (
-                        <SidebarMenuItem key={playground.id}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={
-                              pathname === `playground/${playground.id}`
-                            }
-                            tooltip={playground.name}
-                          >
-                            <Link href={`/playground/${playground.id}`}>
-                              {IconComponent && (
-                                <IconComponent className="h-4 w-4" />
-                              )}
-                              <span>{playground.name}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
+                {recentPlaygrounds.length === 0 ? (
+                  <p className="text-xs text-muted-foreground px-2 py-2">
+                    No recent projects
+                  </p>
+                ) : (
+                  recentPlaygrounds.map((playground) => {
+                    const IconComponent =
+                      lucideIconMap[playground.icon] || Code2;
+                    return (
+                      <SidebarMenuItem key={playground.id}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === `/playground/${playground.id}`}
+                          tooltip={playground.name}
+                        >
+                          <Link href={`/playground/${playground.id}`}>
+                            <IconComponent className="h-4 w-4" />
+                            <span>{playground.name}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })
+                )}
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="View all">
-                    <Link href="/playgrounds">
-                      <span className="text-sm text-muted-foreground">
-                        View all playgrounds
-                      </span>
-                    </Link>
+                  <SidebarMenuButton
+                    tooltip="View all"
+                    onClick={() => router.push("/dashboard")}
+                  >
+                    <span className="text-sm text-muted-foreground">
+                      View all playgrounds
+                    </span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -207,6 +236,8 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
+
+      {/* Star Modal */}
       {showStarModal && (
         <div
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
@@ -223,12 +254,10 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
                 .map((playground) => (
                   <button
                     key={playground.id}
-                    onClick={() => {
-                      setStarredPlaygrounds((prev) => [
-                        ...prev,
-                        { ...playground, starred: true },
-                      ]);
+                    onClick={async () => {
+                      await toggleStarMarked(playground.id, true);
                       setShowStarModal(false);
+                      router.refresh();
                     }}
                     className="w-full text-left px-3 py-2 hover:bg-zinc-800 rounded-lg text-sm text-zinc-300 transition-colors"
                   >
@@ -250,6 +279,12 @@ export function DashboardSidebar({ initialPlaygroundData }: { initialPlaygroundD
           </div>
         </div>
       )}
+
+      {/* New Playground Modal */}
+      <SpotlightModal
+        isOpen={showNewModal}
+        onClose={() => setShowNewModal(false)}
+      />
     </>
   );
 }
