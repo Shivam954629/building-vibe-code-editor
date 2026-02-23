@@ -679,7 +679,7 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      if (e.key === "Enter" && !e.shiftKey) {
                         handleSendMessage(e as any);
                       }
                     }}
