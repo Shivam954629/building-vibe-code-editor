@@ -1,5 +1,8 @@
 # 🧠 Vibecode Editor – AI-Powered Web IDE
 
+## 🚀 Live Demo
+[building-vibe-code-editor.vercel.app](https://building-vibe-code-editor.vercel.app)
+
 ![Vibecode Editor Thumbnail](public/vibe-code-editor-thumbnail.svg)
 
 **Vibecode Editor** is a blazing-fast, AI-integrated web IDE built entirely in the browser using **Next.js App Router**, **WebContainers**, **Monaco Editor**, and **Groq AI**.
@@ -42,7 +45,7 @@
 ### 1. Clone the Repo
 
 ```bash
-git clone https://github.com/your-username/vibecode-editor.git
+git clone https://github.com/Shivam954629/building-vibe-code-editor.git
 cd vibecode-editor
 ````
 
