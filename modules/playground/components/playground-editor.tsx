@@ -113,13 +113,14 @@ export const PlaygroundEditor = ({
                 kind: monaco.languages.CompletionItemKind.Snippet,
                 label: "AI Suggestion",
                 detail: "AI-generated code suggestion",
-                documentation: "Press Tab to accept",
+                documentation: "Press Ctrl+Enter to accept",
                 sortText: "0000", // High priority
                 filterText: "",
-                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                insertTextRules:
+                  monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               },
             ],
-          }
+          };
         },
         freeInlineCompletions: (completions: any) => {
           console.log("freeInlineCompletions called")
@@ -401,6 +402,15 @@ export const PlaygroundEditor = ({
       // CRITICAL: Use specific context to override Monaco's built-in Tab handling
       "editorTextFocus && !editorReadonly && !suggestWidgetVisible",
     );
+    editor.addCommand(
+      monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+      () => {
+        if (currentSuggestionRef.current && !isAcceptingSuggestionRef.current) {
+          acceptCurrentSuggestion();
+        }
+      },
+      "editorTextFocus",
+    );
 
     // Escape to reject
     editor.addCommand(monaco.KeyCode.Escape, () => {
@@ -523,39 +533,65 @@ export const PlaygroundEditor = ({
   }, [])
 
   return (
-    <div className="h-full relative">
-      {/* Loading indicator */}
-      {suggestionLoading && (
-        <div className="absolute top-2 right-2 z-10 bg-red-100 dark:bg-red-900 px-2 py-1 rounded text-xs text-red-700 dark:text-red-300 flex items-center gap-1">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          AI thinking...
-        </div>
-      )}
+    <div className="h-full flex flex-col">
+      {/* AI Shortcuts Hint Bar */}
+      <div className="flex items-center gap-4 px-4 py-1.5 bg-zinc-950 border-b border-zinc-800 text-xs text-zinc-500 shrink-0">
+        <span className="text-purple-400 font-semibold tracking-wide">
+          ✦ AI
+        </span>
+        <span className="flex items-center gap-1.5">
+          <kbd className="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-zinc-300 font-mono">
+            Ctrl+Space
+          </kbd>
+          <span>Suggest</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <kbd className="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-zinc-300 font-mono">
+            Ctrl+Enter
+          </kbd>
+          <span>Accept</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <kbd className="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-zinc-300 font-mono">
+            Esc
+          </kbd>
+          <span>Reject</span>
+        </span>
+      </div>
 
-      {/* Active suggestion indicator */}
-      {currentSuggestionRef.current && !suggestionLoading && (
-        <div className="absolute top-2 right-2 z-10 bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-xs text-green-700 dark:text-green-300 flex items-center gap-1">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          Click Tab to accept
-        </div>
-      )}
+      {/* Editor Area */}
+      <div className="flex-1 relative min-h-0">
+        {suggestionLoading && (
+          <div className="absolute top-2 right-2 z-10 bg-purple-900/80 px-2 py-1 rounded text-xs text-purple-300 flex items-center gap-1">
+            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+            AI thinking...
+          </div>
+        )}
 
-      <Editor
-        height="100%"
-        value={content}
-        onChange={(value) => onContentChange(value || "")}
-        onMount={handleEditorDidMount}
-        language={
-          activeFile
-            ? getEditorLanguage(activeFile.fileExtension || "")
-            : "plaintext"
-        }
-        // @ts-ignore
-        options={{
-          ...defaultEditorOptions,
-          automaticLayout: true,
-        }}
-      />
+        {currentSuggestionRef.current && !suggestionLoading && (
+          <div className="absolute top-2 right-2 z-10 bg-green-900/80 px-2 py-1 rounded text-xs text-green-300 flex items-center gap-1">
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            Ctrl+Enter to accept
+          </div>
+        )}
+
+        <Editor
+          height="100%"
+          value={content}
+          onChange={(value) => onContentChange(value || "")}
+          onMount={handleEditorDidMount}
+          language={
+            activeFile
+              ? getEditorLanguage(activeFile.fileExtension || "")
+              : "plaintext"
+          }
+          // @ts-ignore
+          options={{
+            ...defaultEditorOptions,
+            automaticLayout: true,
+          }}
+        />
+      </div>
     </div>
   );
 }
