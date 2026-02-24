@@ -157,7 +157,7 @@ export default function Home() {
           </span>
         </h1>
 
-        <p className="text-base md:text-lg text-gray-500 dark:text-gray-400 max-w-xl mb-10 mt-4">
+        <p className="text-base md:text-lg text-muted-foreground max-w-xl mb-10 mt-4">
           A powerful browser-based code editor with real-time preview,
           multi-framework support, and AI assistance. No setup. Just code.
         </p>
@@ -173,7 +173,7 @@ export default function Home() {
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-12 mb-20 border border-zinc-800 rounded-2xl px-10 py-5 bg-zinc-900/50">
+        <div className="flex items-center gap-12 mb-20 border border-border rounded-2xl px-10 py-5 bg-muted/50">
           {[
             { label: "Frameworks", value: "6+" },
             { label: "Setup Time", value: "0ms" },
@@ -181,22 +181,24 @@ export default function Home() {
             { label: "Open Source", value: "✓" },
           ].map((stat, i) => (
             <div key={stat.label} className="text-center">
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
-              <p className="text-xs text-zinc-500 mt-0.5">{stat.label}</p>
+              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {stat.label}
+              </p>
             </div>
           ))}
         </div>
 
         {/* Tech Stack Floating Logos */}
         <div className="w-full max-w-3xl mb-20">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-6">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-6">
             Supported Frameworks
           </p>
           <div className="flex items-center justify-center gap-8 flex-wrap">
             {techStack.map((tech) => (
               <div
                 key={tech.name}
-                className="group flex flex-col items-center gap-2 p-4 rounded-2xl border border-zinc-800 hover:border-zinc-600 bg-zinc-900/50 hover:bg-zinc-800/80 transition-all duration-300 hover:scale-110 hover:-translate-y-1 cursor-pointer w-20"
+                className="group flex flex-col items-center gap-2 p-4 rounded-2xl border border-border hover:border-border/60 bg-muted/50 hover:bg-muted transition-all duration-300 hover:scale-110 hover:-translate-y-1 cursor-pointer w-20"
               >
                 <Image
                   src={tech.icon}
@@ -205,7 +207,7 @@ export default function Home() {
                   height={32}
                   className="object-contain"
                 />
-                <span className="text-xs text-zinc-500 group-hover:text-zinc-300 transition-colors">
+                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
                   {tech.name}
                 </span>
               </div>
@@ -215,10 +217,10 @@ export default function Home() {
 
         {/* How it Works */}
         <div className="w-full max-w-4xl mb-20">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">
             How it works
           </p>
-          <h2 className="text-2xl font-bold text-white mb-10">
+          <h2 className="text-2xl font-bold text-foreground mb-10">
             From idea to running code in seconds
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -227,7 +229,7 @@ export default function Home() {
               return (
                 <div
                   key={step.step}
-                  className="relative flex flex-col items-center text-center p-5 bg-zinc-900/80 border border-zinc-800 rounded-2xl hover:border-[#E93F3F]/40 transition-all duration-300 group"
+                  className="relative flex flex-col items-center text-center p-5 bg-muted/50 border border-border rounded-2xl hover:border-[#E93F3F]/40 transition-all duration-300 group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-[#E93F3F]/10 flex items-center justify-center mb-3 group-hover:bg-[#E93F3F]/20 transition-colors">
                     <Icon className="h-5 w-5 text-[#E93F3F]" />
@@ -235,14 +237,14 @@ export default function Home() {
                   <span className="text-xs text-[#E93F3F] font-mono font-bold mb-1">
                     {step.step}
                   </span>
-                  <h3 className="text-sm font-semibold text-white mb-1">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">
                     {step.title}
                   </h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     {step.desc}
                   </p>
                   {i < steps.length - 1 && (
-                    <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 text-zinc-700 text-lg z-10">
+                    <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 text-muted-foreground text-lg z-10">
                       →
                     </div>
                   )}
@@ -254,10 +256,10 @@ export default function Home() {
 
         {/* Features Grid */}
         <div className="w-full max-w-4xl mb-16">
-          <p className="text-xs text-zinc-500 uppercase tracking-widest mb-2">
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">
             Features
           </p>
-          <h2 className="text-2xl font-bold text-white mb-10">
+          <h2 className="text-2xl font-bold text-foreground mb-10">
             Everything you need to code
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -266,7 +268,7 @@ export default function Home() {
               return (
                 <div
                   key={feature.title}
-                  className="group p-5 bg-zinc-900/80 border border-zinc-800 rounded-2xl hover:border-zinc-600 transition-all duration-300 text-left hover:shadow-lg hover:-translate-y-0.5"
+                  className="group p-5 bg-muted/50 border border-border rounded-2xl hover:border-border/60 transition-all duration-300 text-left hover:shadow-lg hover:-translate-y-0.5"
                 >
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
@@ -277,10 +279,10 @@ export default function Home() {
                       style={{ color: feature.color }}
                     />
                   </div>
-                  <h3 className="text-sm font-semibold text-white mb-1">
+                  <h3 className="text-sm font-semibold text-foreground mb-1">
                     {feature.title}
                   </h3>
-                  <p className="text-xs text-zinc-500 leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     {feature.desc}
                   </p>
                 </div>
@@ -289,10 +291,8 @@ export default function Home() {
           </div>
         </div>
 
-        
-
         {/* Footer text */}
-        <p className="text-xs text-zinc-600 mt-12">
+        <p className="text-xs text-muted-foreground mt-12">
           Built with Next.js • WebContainers • Prisma • NextAuth
         </p>
       </div>

@@ -10,7 +10,7 @@ const Page = () => {
       <div className="hidden lg:flex flex-col gap-4">
         <Link href="/" className="flex items-center gap-3">
           <Image src="/logo.svg" alt="Logo" height={40} width={40} />
-          <span className="font-extrabold text-xl text-white">
+          <span className="font-extrabold text-xl text-foreground dark:text-white">
             VibeCode Editor
           </span>
         </Link>
@@ -27,14 +27,14 @@ const Page = () => {
         </div>
 
         <div>
-          <h2 className="text-3xl font-extrabold text-white leading-tight mb-2">
+          <h2 className="text-3xl font-extrabold text-foreground dark:text-white leading-tight mb-2">
             Build faster.
             <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 via-red-400 to-pink-500">
               Ship smarter.
             </span>
           </h2>
-          <p className="text-zinc-500 text-sm max-w-sm">
+          <p className="text-muted-foreground text-sm max-w-sm">
             Browser-based coding. No setup — just open and start building.
           </p>
         </div>
@@ -51,10 +51,10 @@ const Page = () => {
             return (
               <div
                 key={item.text}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-full"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-muted border border-border rounded-full"
               >
                 <Icon className="h-3 w-3 text-[#E93F3F]" />
-                <span className="text-xs text-zinc-300">{item.text}</span>
+                <span className="text-xs text-foreground">{item.text}</span>
               </div>
             );
           })}
@@ -80,29 +80,29 @@ const Page = () => {
         </div>
 
         {/* Glass Card */}
-        <div className="w-full max-w-md bg-zinc-900/90 border border-zinc-700/80 rounded-3xl p-7 shadow-2xl shadow-black/50 backdrop-blur-xl">
+        <div className="w-full max-w-md bg-card border border-border rounded-3xl p-7 shadow-2xl backdrop-blur-xl">
           <div className="text-center mb-5">
             <div className="w-12 h-12 rounded-2xl bg-[#E93F3F]/10 border border-[#E93F3F]/20 flex items-center justify-center mx-auto mb-3">
               <Image src="/logo.svg" alt="Logo" height={28} width={28} />
             </div>
-            <h1 className="text-2xl font-extrabold text-white mb-1">
+            <h1 className="text-2xl font-extrabold text-foreground mb-1">
               Welcome back
             </h1>
-            <p className="text-zinc-400 text-sm">
+            <p className="text-muted-foreground text-sm">
               Sign in to your VibeCode account
             </p>
           </div>
 
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-zinc-800" />
-            <span className="text-xs text-zinc-500">continue with</span>
-            <div className="flex-1 h-px bg-zinc-800" />
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">continue with</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
 
           <SignInFormClient />
         </div>
 
-        <p className="text-xs text-zinc-600 text-center mt-4">
+        <p className="text-xs text-muted-foreground text-center mt-4">
           © 2026 VibeCode Editor. All rights reserved.
         </p>
       </div>

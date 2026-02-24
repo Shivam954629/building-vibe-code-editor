@@ -243,9 +243,7 @@ const MainPlaygroundPage = () => {
         );
         setOpenFiles(updatedOpenFiles);
 
-        // Sirf iframe reload karo, poora component nahi
-        // Sirf iframe reload karo, poora component nahi
-        console.log("refresh ref:", refreshPreviewRef.current);
+        
         if (refreshPreviewRef.current) {
           refreshPreviewRef.current();
         }
