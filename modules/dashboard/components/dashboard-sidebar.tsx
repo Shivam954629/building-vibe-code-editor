@@ -176,7 +176,7 @@ export function DashboardSidebar({
               </div>
               <button
                 onClick={() => setShowNewModal(true)}
-                className="hover:text-white text-zinc-400 transition-colors"
+                className="hover:text-foreground text-muted-foreground transition-colors"
               >
                 <FolderPlus className="h-4 w-4" />
               </button>
@@ -244,7 +244,7 @@ export function DashboardSidebar({
           onClick={() => setShowStarModal(false)}
         >
           <div
-            className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 w-80"
+            className="bg-card border border-border rounded-xl p-6 w-80"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold mb-4">Star a Project</h3>
@@ -259,20 +259,20 @@ export function DashboardSidebar({
                       setShowStarModal(false);
                       router.refresh();
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-zinc-800 rounded-lg text-sm text-zinc-300 transition-colors"
+                    className="w-full text-left px-3 py-2 hover:bg-muted rounded-lg text-sm text-foreground transition-colors"
                   >
                     {playground.name}
                   </button>
                 ))}
               {recentPlaygrounds.filter((p) => !p.starred).length === 0 && (
-                <p className="text-zinc-500 text-sm">
-                  Sare projects already starred hain
+                <p className="text-muted-foreground text-sm">
+                  All projects are already starred
                 </p>
               )}
             </div>
             <button
               onClick={() => setShowStarModal(false)}
-              className="mt-4 text-sm text-zinc-500 hover:text-zinc-300"
+              className="mt-4 text-sm text-muted-foreground hover:text-foreground"
             >
               Cancel
             </button>
