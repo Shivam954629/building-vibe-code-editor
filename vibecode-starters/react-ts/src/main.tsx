@@ -6,8 +6,7 @@ function App() {
     <div className="app-container">
       <h1 className="app-title">Succesfully app developed</h1>
       <p className="app-description">
-        Your app is running! Start editing <code>src/main.tsx</code>
-      </p>
+        Your app is running! Start editing</p>
     </div>
   );
 }
