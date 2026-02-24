@@ -219,13 +219,13 @@ const MainPlaygroundPage = () => {
           updatedTemplateData.items,
         );
 
-        // Sync with WebContainer
-        if (writeFileSync) {
+        // Sync with WebContainer - single write to properly trigger HMR
+        if (instance && instance.fs) {
+          await instance.fs.writeFile(filePath, fileToSave.content);
+          lastSyncedContent.current.set(fileToSave.id, fileToSave.content);
+        } else if (writeFileSync) {
           await writeFileSync(filePath, fileToSave.content);
           lastSyncedContent.current.set(fileToSave.id, fileToSave.content);
-          if (instance && instance.fs) {
-            await instance.fs.writeFile(filePath, fileToSave.content);
-          }
         }
 
         const newTemplateData = await saveTemplateData(updatedTemplateData);
@@ -243,7 +243,6 @@ const MainPlaygroundPage = () => {
         );
         setOpenFiles(updatedOpenFiles);
 
-        
         if (refreshPreviewRef.current) {
           refreshPreviewRef.current();
         }
@@ -287,7 +286,10 @@ const MainPlaygroundPage = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "s") {
+      if (e.ctrlKey && e.shiftKey && e.key === "S") {
+        e.preventDefault();
+        handleSaveAll();
+      } else if (e.ctrlKey && e.key === "s") {
         e.preventDefault();
         handleSave();
       }
@@ -367,7 +369,6 @@ const MainPlaygroundPage = () => {
         />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-           
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <a
