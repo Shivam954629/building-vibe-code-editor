@@ -9,47 +9,52 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       if (!user.email) return false;
 
-      let dbUser = await db.user.findUnique({ where: { email: user.email } });
+      try {
+        let dbUser = await db.user.findUnique({ where: { email: user.email } });
 
-      if (!dbUser) {
-        dbUser = await db.user.create({
-          data: {
-            name: user.name,
-            email: user.email,
-            image: user.image,
-          },
-        });
-      }
-
-      if (account) {
-        const existingAccount = await db.account.findUnique({
-          where: {
-            provider_providerAccountId: {
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-            },
-          },
-        });
-
-        if (!existingAccount) {
-          await db.account.create({
+        if (!dbUser) {
+          dbUser = await db.user.create({
             data: {
-              userId: dbUser.id,
-              type: account.type,
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-              accessToken: account.access_token,
-              refreshToken: account.refresh_token,
-              expiresAt: account.expires_at,
-              tokenType: account.token_type,
-              scope: account.scope,
-              idToken: account.id_token,
+              name: user.name,
+              email: user.email,
+              image: user.image,
             },
           });
         }
+
+        if (account) {
+          const existingAccount = await db.account.findUnique({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+          });
+
+          if (!existingAccount) {
+            await db.account.create({
+              data: {
+                userId: dbUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                accessToken: account.access_token ?? null,
+                refreshToken: account.refresh_token ?? null,
+                expiresAt: account.expires_at ?? null,
+                tokenType: account.token_type ?? null,
+                scope: account.scope ?? null,
+                idToken: account.id_token ?? null,
+              },
+            });
+          }
+        }
+
+        user.id = dbUser.id;
+      } catch (error) {
+        console.error("[signIn] DB error:", error);
       }
 
-      user.id = dbUser.id;
       return true;
     },
 
