@@ -28,7 +28,7 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
   const [error, setError] = useState<string | null>(null);
 
   const loadPlayground = useCallback(async () => {
-    if (!id) return;
+    if (!id || id === "undefined") return;
 
     try {
       setIsLoading(true);
