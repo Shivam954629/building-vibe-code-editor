@@ -75,11 +75,11 @@ export const createPlayground = async (data: {
   title: string;
   template: "REACT" | "NEXTJS" | "EXPRESS" | "VUE" | "HONO" | "ANGULAR";
   description?: string;
-}) => {
+}): Promise<{ success: false; error: string } | { success: true; id: string }> => {
   const user = await currentUser();
 
   if (!user?.id) {
-    throw new Error("Not authenticated");
+    return { success: false, error: "Not authenticated — user ID missing from session" };
   }
 
   const { template, title, description } = data;
@@ -87,17 +87,19 @@ export const createPlayground = async (data: {
   try {
     const playground = await db.playground.create({
       data: {
-        title: title,
-        description: description,
-        template: template,
+        title,
+        description,
+        template,
         userId: user.id,
       },
     });
 
-    return playground;
-  } catch (error) {
-    console.error("createPlayground error:", error);
-    throw error;
+    revalidatePath("/dashboard");
+    return { success: true, id: playground.id };
+  } catch (error: any) {
+    const msg = error?.message ?? "Unknown DB error";
+    console.error("createPlayground error:", msg);
+    return { success: false, error: msg };
   }
 };
 

@@ -103,21 +103,19 @@ export function SpotlightModal({ isOpen, onClose }: SpotlightModalProps) {
   const handleCreate = async () => {
     if (!selected || !projectName.trim()) return;
     setIsLoading(true);
-    try {
-      const res = await createPlayground({
-        title: projectName,
-        template: selected as any,
-      });
-      if (!res?.id) throw new Error("No playground ID returned");
-      toast.success("Playground created!");
-      onClose();
-      router.refresh();
-      router.push(`/playground/${res.id}`);
-    } catch {
-      toast.error("Failed to create playground");
-    } finally {
-      setIsLoading(false);
+    const res = await createPlayground({
+      title: projectName,
+      template: selected as any,
+    });
+    setIsLoading(false);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
     }
+    toast.success("Playground created!");
+    onClose();
+    router.refresh();
+    router.push(`/playground/${res.id}`);
   };
 
   if (!isOpen) return null;
