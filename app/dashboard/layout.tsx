@@ -30,16 +30,12 @@ export default async function DashboardLayout({
     icon:technologyIconMap[item.template] || "Code2"
   }))
 
-  const isOpen = true;
-
-
   return (
-    <SidebarProvider defaultOpen={isOpen}>
-      <div className="flex min-h-screen w-full overflow-x-hidden">
-        {/* Dashboard Sidebar */}
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full overflow-x-hidden relative">
         {/* @ts-ignore */}
         <DashboardSidebar initialPlaygroundData={formattedPlaygroundData ?? []} />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 min-w-0">{children}</main>
       </div>
     </SidebarProvider>
   );

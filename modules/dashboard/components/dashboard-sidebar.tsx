@@ -74,13 +74,8 @@ export function DashboardSidebar({
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setOpen(true);
-      } else {
-        setOpen(false);
-      }
+      setOpen(window.innerWidth >= 768);
     };
-    // Initial check
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -88,7 +83,7 @@ export function DashboardSidebar({
 
   return (
     <>
-      <Sidebar variant="inset" collapsible="icon" className="border-1 border-r">
+      <Sidebar variant="sidebar" collapsible="icon" className="border-r">
         <SidebarHeader>
           <div className="flex items-center gap-2 px-4 py-3 justify-center">
             <Image src={"/logo.svg"} alt="logo" height={60} width={60} />

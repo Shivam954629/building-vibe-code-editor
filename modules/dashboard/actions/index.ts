@@ -78,6 +78,10 @@ export const createPlayground = async (data: {
 }) => {
   const user = await currentUser();
 
+  if (!user?.id) {
+    throw new Error("Not authenticated");
+  }
+
   const { template, title, description } = data;
 
   try {
@@ -86,7 +90,7 @@ export const createPlayground = async (data: {
         title: title,
         description: description,
         template: template,
-        userId: user?.id!,
+        userId: user.id,
       },
     });
 

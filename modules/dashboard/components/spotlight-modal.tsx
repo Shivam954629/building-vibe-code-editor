@@ -111,6 +111,7 @@ export function SpotlightModal({ isOpen, onClose }: SpotlightModalProps) {
       if (!res?.id) throw new Error("No playground ID returned");
       toast.success("Playground created!");
       onClose();
+      router.refresh();
       router.push(`/playground/${res.id}`);
     } catch {
       toast.error("Failed to create playground");
